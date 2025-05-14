@@ -1,4 +1,5 @@
 # 📚 Sistema de Gerenciamento de Biblioteca
+![Backend CI](https://github.com/ViniciusFaria-png/library-management-system-ts-docker/actions/workflows/ci.yml/badge.svg)
 
 ## 🎯 Objetivo
 

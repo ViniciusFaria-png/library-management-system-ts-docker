@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import Publisher from '../models/Publisher';
+import Book from '../models/Book';
 
 class PublisherController {
   async createPublisher(req: Request, res: Response): Promise<void> {
@@ -14,8 +15,19 @@ class PublisherController {
 
   async getPublishers(req: Request, res: Response): Promise<void> {
     try {
-      const publishers = await Publisher.find().populate('books');
-      res.json(publishers);
+      const publishers = await Publisher.find();
+
+      const publishersWithBooks = await Promise.all(
+        publishers.map(async(publisher) => {
+          const books = await Book.find({publisher: publisher._id});
+          return {
+            ...publisher.toObject(),
+            books,
+          }
+        })
+      );
+
+      res.json(publishersWithBooks);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
     }
@@ -23,12 +35,18 @@ class PublisherController {
 
   async getPublisherById(req: Request, res: Response): Promise<void> {
     try {
-      const publisher = await Publisher.findById(req.params.id).populate('books');
+      const publisher = await Publisher.findById(req.params.id);
       if (!publisher) {
         res.status(404).json({ error: 'Publisher not found' });
         return;
       }
-      res.json(publisher);
+
+      const books = await Book.find({publisher: publisher._id});
+
+      res.json({
+        ...publisher.toObject(),
+        books,
+      });
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
     }
@@ -49,12 +67,21 @@ class PublisherController {
 
   async deletePublisher(req: Request, res: Response): Promise<void> {
     try {
-      const publisher = await Publisher.findByIdAndDelete(req.params.id);
+
+      const publisherId = req.params.id;
+      const books = await Book.find({publisher: publisherId});
+
+      if (books.length > 0){
+        res.status(400).json({ error: 'Cannot delete publisher with associated books'});
+        return;
+      }
+
+      const publisher = await Publisher.findByIdAndDelete(publisherId);
       if (!publisher) {
         res.status(404).json({ error: 'Publisher not found' });
         return;
       }
-      res.json({ message: 'Publisher deleted successfully' });
+      res.status(204).json({ message: 'Publisher deleted successfully' });
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });
     }

@@ -10,7 +10,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-connectInDataBase();
+if (process.env.NODE_ENV !== 'test'){
+    connectInDataBase();
+  }
 
 app.use('/api', routes);
 

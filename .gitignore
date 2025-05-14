@@ -41,7 +41,3 @@ $RECYCLE.BIN/
 
 [Tt]humbs.db
 Desktop.ini
-
-package-lock.json
-yarn.lock
-pnpm-lock.yaml

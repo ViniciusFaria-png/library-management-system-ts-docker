@@ -12,16 +12,36 @@ class BookController {
         res.status(400).json({ error: 'Missing required fields' });
         return;
       }
+
+      let publisherId = null;
   
       if (publisher) {
+      if (!publisher.match(/^[0-9a-fA-F]{24}$/)) {
+        const foundPublisher = await Publisher.findOne({ name: publisher });
+        if (!foundPublisher) {
+          res.status(404).json({ error: 'Publisher not found' });
+          return;
+        }
+        publisherId = foundPublisher._id;
+      } else {
         const publisherExists = await Publisher.findById(publisher);
         if (!publisherExists) {
           res.status(404).json({ error: 'Publisher not found' });
           return;
         }
+        publisherId = publisher;
       }
+    }
+
   
-      const book = new Book(req.body);
+      const book = new Book({
+      title,
+      author,
+      isbn,
+      publicationYear,
+      publisher: publisherId ?? undefined
+    });
+    
       await book.save();
       res.status(201).json(book);
     } catch (error: any) {
